@@ -15,7 +15,7 @@ names(ds_vars) <- ds_cols
 
 # identify numeric columns
 ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
-ds_numeric_cols <- sort(ds_numeric_cols[1:length(ds_numeric_cols)-1])
+ds_numeric_cols <- sort(ds_numeric_cols[1:length(ds_numeric_cols)])
 ds_numeric_vars <- as.list(seq(1,length(ds_numeric_cols)))
 names(ds_numeric_vars) <- ds_numeric_cols
 # (without the iteration column)
