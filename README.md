@@ -22,6 +22,7 @@ Basic features:
 * the tooltip of the points on scatter plots display info on the values of the current individual on all the dimensions, in order to make it easier to understand the relationship between variables
 
 Advanced features: 
+* Color the points of all the diagrams to add a dimension on them. The same color will be used on all the plots.
 * Scatter Plot Matrices (SPLOM) displaying all the combinations of variables (inputs, outputs)
 * Parallel Plot Diagrams to better understand the links between the various variables in the dataset
 
