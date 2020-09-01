@@ -178,26 +178,32 @@ server <- function(input, output) {
 	selected_keys_without_scatter <- reactive({
 		event.data <- event_data(event = "plotly_selected", source = "plotSplom")
 
-		if (is.null(event.data)) {		
-			NULL
+		if (is.null(event.data)) {
+			if (is.null(input$datatable_rows_selected)) {
+				NULL
+			} else {
+				as.list(as.integer(input$datatable_rows_selected)-1)
+			}
 		} else {
-			print(event.data)
-			as.integer(event.data$key)
+			which(relevant_ds()$ID %in% as.integer(event.data$key))-1
 		}	
 	})
 
 	selected_keys_without_splom <- reactive({
 		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
 
-		if (is.null(event.data)) {		
-			NULL
+		if (is.null(event.data)) {
+			if (is.null(input$datatable_rows_selected)) {
+				NULL
+			} else {
+				as.list(as.integer(input$datatable_rows_selected)-1)
+			}
 		} else {
-			print(event.data)
-			as.integer(event.data$key)
+			which(relevant_ds()$ID %in% as.integer(event.data$key))-1
 		}	
 	})
 
-	selected_keys <- reactive({
+	selected_keys_without_table <- reactive({
 		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
 
 		if (is.null(event.data)) {		
@@ -207,8 +213,7 @@ server <- function(input, output) {
 		if (is.null(event.data)) {		
 			NULL
 		} else {
-			print(event.data)
-			as.integer(event.data$key)
+			which(relevant_ds()$ID %in% as.integer(event.data$key))-1
 		}	
 	})
 
@@ -290,7 +295,7 @@ server <- function(input, output) {
 			sp <- selected_keys_without_scatter()
 			selectedpoints <- NULL 
 			if (!is.null(sp)) { 
-				selectedpoints <- which(relevant_ds$ID %in% sp)-1
+				selectedpoints <- sp
 				marker_opts["opacity"] <- 0.5
 			}
 			
@@ -455,7 +460,7 @@ server <- function(input, output) {
 			sp <- selected_keys_without_splom()	
 			selectedpoints <- NULL 
 			if (!is.null(sp)) { 
-				selectedpoints <- which(relevant_ds$ID %in% sp)-1
+				selectedpoints <- sp
 				marker_opts["opacity"] <- 0.3
 			}
 
@@ -495,7 +500,7 @@ server <- function(input, output) {
 				diagonal = list(visible = F),
 				showlowerhalf = T,
 				showupperhalf = F
-			) %>% event_register('plotly_selected')
+			)
 			
 				
 		} else NULL
@@ -504,16 +509,14 @@ server <- function(input, output) {
 	output$datatable <- renderDT({
 
 		if (input$drawTable) {
-			print("selected_keys")
-			print(selected_keys())
-			relevant_ds <- relevant_ds()
 
+			relevant_ds <- relevant_ds()
 			
-			selected_keys <- selected_keys()
+			selected_keys <- selected_keys_without_table()
 			selected <- if (is.null(selected_keys)) {
 				NULL
 			} else {
-				which(relevant_ds$ID %in% selected_keys)
+				selected_keys + 1
 			}
 
 			datatable(
@@ -523,7 +526,8 @@ server <- function(input, output) {
 				options = list(
 				  	pageLength = 20,
 					lengthChange = FALSE
-					)
+					),
+				rownames = FALSE
 			)
 		} else {
 			NULL
