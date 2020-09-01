@@ -3,7 +3,7 @@ library(plotly)
 library(DT)
 
 ds <- read.csv(file="../concatenated.csv", header=T) #, nrow=1000
-ds$ID <- seq.int(nrow(ds))
+ds$ID <- row.names(ds) #seq.int(nrow(ds))
 
 ds_iteration_max <- max(ds$evolution.generation)
 
@@ -181,6 +181,7 @@ server <- function(input, output) {
 		if (is.null(event.data)) {		
 			NULL
 		} else {
+			print(event.data)
 			as.integer(event.data$key)
 		}	
 	})
@@ -191,6 +192,7 @@ server <- function(input, output) {
 		if (is.null(event.data)) {		
 			NULL
 		} else {
+			print(event.data)
 			as.integer(event.data$key)
 		}	
 	})
@@ -200,13 +202,12 @@ server <- function(input, output) {
 
 		if (is.null(event.data)) {		
 			event.data <- event_data(event = "plotly_selected", source = "plotSplom")
-		} else {
-			as.integer(event.data$key)
-		}	
+		} 
 
 		if (is.null(event.data)) {		
 			NULL
 		} else {
+			print(event.data)
 			as.integer(event.data$key)
 		}	
 	})
@@ -286,10 +287,10 @@ server <- function(input, output) {
 				yaxis_opt[["range"]] <- NULL
 			}
 
-			sp <- selected_keys_without_scatter()	
+			sp <- selected_keys_without_scatter()
 			selectedpoints <- NULL 
 			if (!is.null(sp)) { 
-				selectedpoints <- which(relevant_ds$ID %in% sp)
+				selectedpoints <- which(relevant_ds$ID %in% sp)-1
 				marker_opts["opacity"] <- 0.5
 			}
 			
@@ -300,7 +301,7 @@ server <- function(input, output) {
 				type="scatter", 
 				mode="markers", 
 				marker=marker_opts,
-				key=~ID,
+				key=relevant_ds$ID,
 				source="plotScatter",
 				hoverinfo = "text",
 				text=tooltips(),
@@ -378,9 +379,8 @@ server <- function(input, output) {
 				type='parcoords',
 				dimensions=dimensions,
 				line = line_opts,
-				key=~ID,
+				key=relevant_ds$ID,
 				source="plotParallel"
-				# TODO selectedpoints=which(relevant_ds$ID %in% selected_keys())
 				)
 		
 		} else NULL
@@ -451,21 +451,21 @@ server <- function(input, output) {
 				gridcolor='#ffff',
 				ticklen=4)
 
-
+			
 			sp <- selected_keys_without_splom()	
 			selectedpoints <- NULL 
 			if (!is.null(sp)) { 
-				selectedpoints <- which(relevant_ds$ID %in% sp)
+				selectedpoints <- which(relevant_ds$ID %in% sp)-1
 				marker_opts["opacity"] <- 0.3
 			}
 
-			relevant_ds %>% 
+
 			plot_ly(
-				key=~ID,
+				relevant_ds,
+				key=relevant_ds$ID,
 				source="plotSplom",
 				selectedpoints=selectedpoints
-			) %>% 
-			add_trace(
+			) %>% add_trace(
 				type="splom",
 				dimensions=dimensions,
 				hoverinfo = "text",
@@ -495,7 +495,7 @@ server <- function(input, output) {
 				diagonal = list(visible = F),
 				showlowerhalf = T,
 				showupperhalf = F
-			) 
+			) %>% event_register('plotly_selected')
 			
 				
 		} else NULL
@@ -513,11 +513,11 @@ server <- function(input, output) {
 			selected <- if (is.null(selected_keys)) {
 				NULL
 			} else {
-				which(relevant_ds$ID %in% selected_keys())
+				which(relevant_ds$ID %in% selected_keys)
 			}
 
 			datatable(
-			      	relevant_ds[,1:ncol(relevant_ds)-1],
+			      	relevant_ds[,3:ncol(relevant_ds)-1],
 				selection = list(mode='multiple', selected = selected),
 				#server = FALSE,
 				options = list(
