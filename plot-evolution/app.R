@@ -243,9 +243,6 @@ server <- function(input, output) {
 				yaxis_opt["range"] <- c(log(min_y()-margin),log(max_y()+margin))
 			}
 
-print(range_x)
-print(range_y)
-
 			plot_ly(
 				data=relevant_ds, 
 				x=relevant_ds[,varx()], 
