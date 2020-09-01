@@ -1,25 +1,31 @@
 library(shiny)
-library(ggplot2)
 library(plotly)
-
+library(DT)
 
 ds <- read.csv(file="../concatenated.csv", header=T) #, nrow=1000
+ds$ID <- seq.int(nrow(ds))
 
 ds_iteration_max <- max(ds$evolution.generation)
 
 ds_cols <- colnames(ds)
+ds_cols <- ds_cols[1:length(ds_cols)-1]
 
 ds_vars <- as.list(seq(1,length(ds_cols)))
 names(ds_vars) <- ds_cols
 
 # identify numeric columns
-ds_numeric_cols <- sort(colnames(ds[,sapply(ds, is.numeric)]))
+ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
+ds_numeric_cols <- sort(ds_numeric_cols[1:length(ds_numeric_cols)-1])
 ds_numeric_vars <- as.list(seq(1,length(ds_numeric_cols)))
 names(ds_numeric_vars) <- ds_numeric_cols
 # (without the iteration column)
 ds_numeric_vars <- ds_numeric_vars[2:length(ds_numeric_vars)]
 # append the "nothing" choice
 ds_numeric_cols <- append(ds_numeric_vars, list("[no color]"=1),0)
+
+# ideas
+# https://deanattali.com/blog/advanced-shiny-tips/
+
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
@@ -76,7 +82,9 @@ ui <- fluidPage(
 			h3("Parallel Plot"),
 			checkboxInput("drawParallel", label = "draw parallel plot", value = FALSE),
 			h3("Scatter Plot Matrix"),
-			checkboxInput("drawSplom", label = "draw scatter plot matrix", value = FALSE)
+			checkboxInput("drawSplom", label = "draw scatter plot matrix", value = FALSE),
+			h3("Data Table"),
+			checkboxInput("drawTable", label = "show data table", value = FALSE)
 		),
 		
 		# Main panel for displaying outputs ----
@@ -95,7 +103,7 @@ ui <- fluidPage(
 						)
 				),
 				column(10,offset = 2,
-					textOutput(outputId = "infoIteration"),
+					textOutput(outputId = "infoIteration")
 				)
 			),
 			conditionalPanel(
@@ -109,6 +117,10 @@ ui <- fluidPage(
 			conditionalPanel(
 				"input.drawSplom",
 				plotlyOutput(outputId = "splomPlot", height='600px')
+			),
+			conditionalPanel(
+				"input.drawTable",
+				DTOutput(outputId = "datatable")
 			)
 		)
 	)
@@ -166,9 +178,27 @@ server <- function(input, output) {
 		input$colorscale
 	})
 
+	selected_keys <- reactive({
+		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
+
+		if (is.null(event.data)) {		
+			event.data <- event_data(event = "plotly_selected", source = "plotSplom")
+		}
+
+		if (is.null(event.data)) {		
+			event.data <- event_data(event = "plotly_selected", source = "plotParallel")
+		}
+
+		if (is.null(event.data)) {		
+			NULL
+		} else {
+			as.integer(event.data$key)
+		}	
+	})
+
 	tooltips <- reactive({
 		d <- relevant_ds()
-		d <- d[,2:ncol(d)]
+		d <- d[,3:ncol(d)-1]
 		d_cols <- colnames(d)
 			apply(d, 1,
 				function(line) {
@@ -241,19 +271,22 @@ server <- function(input, output) {
 				yaxis_opt[["range"]] <- NULL
 			}
 
+			relevant_ds %>%
 			plot_ly(
-				data=relevant_ds, 
 				x=relevant_ds[,varx()], 
 				y=relevant_ds[,vary()], 
 				type="scatter", 
 				mode="markers", 
 				marker=marker_opts,
+				key=~ID,
+				source="plotScatter",
 				hoverinfo = "text",
 				text=tooltips()
-				) %>% layout( 
-					xaxis=xaxis_opt, 
-					yaxis=yaxis_opt
-				)
+			) %>% layout( 
+				xaxis=xaxis_opt, 
+				yaxis=yaxis_opt
+			) 
+			
 			
 		} else {
 			NULL
@@ -268,6 +301,9 @@ server <- function(input, output) {
 
 		if (input$drawParallel) {
 			
+			print("selected:")
+			print(selected_keys())
+
 			relevant_ds <- relevant_ds()
 
 			dimensions <- as.list(
@@ -309,12 +345,16 @@ server <- function(input, output) {
 					colorscale=color_scale()
 					)
 			}
+
+			relevant_ds %>% 
 			plot_ly(
-				data=relevant_ds, 
 				type='parcoords',
 				dimensions=dimensions,
-				line = line_opts
+				line = line_opts,
+				key=~ID,
+				source="plotParallel"
 				)
+		
 		} else NULL
 	})
 	
@@ -382,9 +422,15 @@ server <- function(input, output) {
 				zeroline=FALSE,
 				gridcolor='#ffff',
 				ticklen=4)
-				
-			relevant_ds %>% plot_ly(
-			) %>% add_trace(
+
+			print(colnames(relevant_ds))				
+
+			relevant_ds %>% 
+			plot_ly(
+				key=~ID,
+				source="plotSplom"
+			) %>% 
+			add_trace(
 				type="splom",
 				dimensions=dimensions,
 				hoverinfo = "text",
@@ -407,11 +453,41 @@ server <- function(input, output) {
 				diagonal = list(visible = F),
 				showlowerhalf = T,
 				showupperhalf = F
-			)
-				
+			) 
+			
 				
 		} else NULL
 	})
+
+	output$datatable <- renderDT({
+
+		if (input$drawTable) {
+			print("selected_keys")
+			print(selected_keys())
+			relevant_ds <- relevant_ds()
+
+			
+			selected_keys <- selected_keys()
+			selected <- if (is.null(selected_keys)) {
+				NULL
+			} else {
+				which(relevant_ds$ID %in% selected_keys())
+			}
+
+			datatable(
+			      	relevant_ds[,1:ncol(relevant_ds)-1],
+				selection = list(mode='multiple', selected = selected),
+				#server = FALSE,
+				options = list(
+				  	pageLength = 20,
+					lengthChange = FALSE
+					)
+			)
+		} else {
+			NULL
+		}
+	})
+
 
 }
 
