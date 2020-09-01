@@ -1,6 +1,8 @@
 # plot-evolutionary-algo
 
-## What is it? 
+
+## What is it?
+
 
 This small application takes the results of an [evolutionary algorithm](https://en.wikipedia.org/wiki/Evolutionary_algorithm) and plots its output with a Plotly interactive visualization.
 It intends to help a user of such an algorithm to understand what happens during the evolution and to deal with the many dimensions.
@@ -10,11 +12,22 @@ This small app is standing on the shoulders of giants: [Plotly](https://plotly.c
 
 It inherits the qualities of these components. It is notably agnostic to the platform and operating system (Windows, Linux, MacOS, or anything running R).
 
+
 ## Features 
 
+Basic features: 
+* a slider to explore the results of the evolutionary algorithm over iterations. Changing the slider affects all the plots on the page so they only display the results of the evolutionary algorithm in its current state. 
+* by default, a X,Y [scatter plot](https://en.wikipedia.org/wiki/Scatter_plot) using the two last columns of the dataset; on this plot, every point represents an individual tested by the evolutionary algorithm. 
+(likely the two last goals explored by the evolutionary algorithm).
+* the tooltip of the points on scatter plots display info on the values of the current individual on all the dimensions, in order to make it easier to understand the relationship between variables
+
+Advanced features: 
+* Scatter Plot Matrices (SPLOM) displaying all the combinations of variables (inputs, outputs)
+* Parallel Plot Diagrams to better understand the links between the various variables in the dataset
 
 
 # How to use it?
+
 
 ## Input Data
 
@@ -22,6 +35,7 @@ The input data format is a simple [CSV](https://fr.wikipedia.org/wiki/Comma-sepa
 
 The first column is expected to contain the current generation or iteration. 
 The next columns contain the inputs and outputs. 
+Data is parsed by the app using the R function `read.csv`. 
 
 Here is an example of syntax
 ```
