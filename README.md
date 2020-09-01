@@ -25,10 +25,16 @@ Basic features:
    * the graph can be zoomed in, panned, exported into PNG
    * the range of axis is automatically adapted according to all the iterations in order to compare easily the various generations
 
+![Basic Features: scatter plot](./doc/screenshot-basic.png)
+
 Advanced features: 
 * Color the points of all the diagrams to add a dimension on them. The same color will be used on all the plots.
 * a Scatter Plot Matrices (SPLOM) displaying all the combinations of variables (inputs, outputs)
 * a Parallel Plot Diagrams to better understand the links between the various variables in the dataset
+
+![Advanced Features: parallel plot](./doc/screenshot-parallel-plot.png)
+
+![Advanced Features: SPLOM](./doc/screenshot-splom.png)
 
 
 # How to use it?
