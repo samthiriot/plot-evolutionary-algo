@@ -233,14 +233,12 @@ server <- function(input, output) {
 			# apply log scales
 			if (input$xlog) { 
 				xaxis_opt["type"] <- "log"
-				print(xaxis_opt["range"])
-				margin <- (max_x() - min_x())/100
-				xaxis_opt["range"] <- c(log(min_x()-margin),log(max_x()+margin))
+				xaxis_opt[["range"]] <- NULL
 			}
 			if (input$ylog) { 
 				yaxis_opt["type"] <- "log"
-				margin <- (max_y() - min_y())/100
-				yaxis_opt["range"] <- c(log(min_y()-margin),log(max_y()+margin))
+				#yaxis_opt[["range"]] <- c(log(min_y())-margin,log(max_y()))
+				yaxis_opt[["range"]] <- NULL
 			}
 
 			plot_ly(
