@@ -36,6 +36,24 @@ ui <- fluidPage(
 				choices = ds_numeric_cols, 
 				selected = 1
 			),
+			conditionalPanel(
+				"input.colorvar!='1'",
+				selectInput(
+						"colorscale", 
+						"scale",
+						# from https://plotly.com/r/reference/#heatmap-colorscale
+						choices = list("YlGnBu","YlOrRd","Bluered",
+								"RdBu","Picnic","Rainbow",
+								"Portland","Jet","Hot","Blackbody","Earth",
+								"Electric","Viridis","Cividis",
+								"Greys","Greens","Reds","Blues"
+								#"Viridis","Blackbody","Bluered","Blues","Jet",
+								#"Magma","Plasma","Dense"
+								#"Aggrnyl","Agsunset","Blugrn","Bluyl","Brwnyl","Plotly3"
+								),
+						selected = "Portland"
+						)
+			),
 			h3("Scatter Plot"),
 			checkboxInput("drawScatter", label = "draw X,Y scatter plot", value = TRUE),
 			conditionalPanel(
@@ -141,6 +159,12 @@ server <- function(input, output) {
 		}
 	})
 	
+
+	color_scale <- reactive({
+		print(paste("color:",input$colorscale))
+		input$colorscale
+	})
+
 	tooltips <- reactive({
 		d <- relevant_ds()
 		d <- d[,2:ncol(d)]
@@ -182,7 +206,7 @@ server <- function(input, output) {
 					size=7, 
 					color=relevant_ds[,color_idx()],
 					showscale=T,
-					colorscale='Viridis'
+					colorscale=color_scale()
 					)
 			}
 			
@@ -272,7 +296,7 @@ server <- function(input, output) {
 				list(
 					color=relevant_ds[,color_idx()],
 					showscale = TRUE,
-					colorscale='Viridis'
+					colorscale=color_scale()
 					)
 			}
 			plot_ly(
@@ -333,7 +357,7 @@ server <- function(input, output) {
 				# with color!
 				list(
 				  color = relevant_ds[,color_idx()],
-				  colorscale = 'Viridis',
+				  colorscale=color_scale(),
 				  size = 7,
 				  line = list(
 					width = 1,
