@@ -53,9 +53,6 @@ ui <- fluidPage(
 								"Portland","Jet","Hot","Blackbody","Earth",
 								"Electric","Viridis","Cividis",
 								"Greys","Greens","Reds","Blues"
-								#"Viridis","Blackbody","Bluered","Blues","Jet",
-								#"Magma","Plasma","Dense"
-								#"Aggrnyl","Agsunset","Blugrn","Bluyl","Brwnyl","Plotly3"
 								),
 						selected = "Portland"
 						)
@@ -178,16 +175,34 @@ server <- function(input, output) {
 		input$colorscale
 	})
 
+	selected_keys_without_scatter <- reactive({
+		event.data <- event_data(event = "plotly_selected", source = "plotSplom")
+
+		if (is.null(event.data)) {		
+			NULL
+		} else {
+			as.integer(event.data$key)
+		}	
+	})
+
+	selected_keys_without_splom <- reactive({
+		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
+
+		if (is.null(event.data)) {		
+			NULL
+		} else {
+			as.integer(event.data$key)
+		}	
+	})
+
 	selected_keys <- reactive({
 		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
 
 		if (is.null(event.data)) {		
 			event.data <- event_data(event = "plotly_selected", source = "plotSplom")
-		}
-
-		if (is.null(event.data)) {		
-			event.data <- event_data(event = "plotly_selected", source = "plotParallel")
-		}
+		} else {
+			as.integer(event.data$key)
+		}	
 
 		if (is.null(event.data)) {		
 			NULL
@@ -271,6 +286,13 @@ server <- function(input, output) {
 				yaxis_opt[["range"]] <- NULL
 			}
 
+			sp <- selected_keys_without_scatter()	
+			selectedpoints <- NULL 
+			if (!is.null(sp)) { 
+				selectedpoints <- which(relevant_ds$ID %in% sp)
+				marker_opts["opacity"] <- 0.5
+			}
+			
 			relevant_ds %>%
 			plot_ly(
 				x=relevant_ds[,varx()], 
@@ -281,7 +303,15 @@ server <- function(input, output) {
 				key=~ID,
 				source="plotScatter",
 				hoverinfo = "text",
-				text=tooltips()
+				text=tooltips(),
+				selectedpoints=selectedpoints,
+				selected=attrs_selected(
+					marker = list(
+						size=8, 
+						color="red",
+						opacity = 1
+						)
+					)
 			) %>% layout( 
 				xaxis=xaxis_opt, 
 				yaxis=yaxis_opt
@@ -301,9 +331,6 @@ server <- function(input, output) {
 
 		if (input$drawParallel) {
 			
-			print("selected:")
-			print(selected_keys())
-
 			relevant_ds <- relevant_ds()
 
 			dimensions <- as.list(
@@ -353,6 +380,7 @@ server <- function(input, output) {
 				line = line_opts,
 				key=~ID,
 				source="plotParallel"
+				# TODO selectedpoints=which(relevant_ds$ID %in% selected_keys())
 				)
 		
 		} else NULL
@@ -423,19 +451,33 @@ server <- function(input, output) {
 				gridcolor='#ffff',
 				ticklen=4)
 
-			print(colnames(relevant_ds))				
+
+			sp <- selected_keys_without_splom()	
+			selectedpoints <- NULL 
+			if (!is.null(sp)) { 
+				selectedpoints <- which(relevant_ds$ID %in% sp)
+				marker_opts["opacity"] <- 0.3
+			}
 
 			relevant_ds %>% 
 			plot_ly(
 				key=~ID,
-				source="plotSplom"
+				source="plotSplom",
+				selectedpoints=selectedpoints
 			) %>% 
 			add_trace(
 				type="splom",
 				dimensions=dimensions,
 				hoverinfo = "text",
 				text=tooltips(),
-				marker = marker_opts
+				marker = marker_opts,
+				selected=attrs_selected(
+					marker = list(
+						size=8, 
+						color="red",
+						opacity = 1.0
+						)
+					)
 			) %>% layout(
 				#title='SPLOM',
 				hovermode='closest',
