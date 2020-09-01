@@ -64,12 +64,14 @@ ui <- fluidPage(
 						choices = ds_vars[2:length(ds_vars)],
 						selected = length(ds_cols)-1
 						),
+				checkboxInput("xlog", label = "logarithmic", value = FALSE),
 				selectInput(
 						"y", 
 						"Y",
 						choices = ds_vars[2:length(ds_vars)],
 						selected = length(ds_cols)
-						)
+						),
+				checkboxInput("ylog", label = "logarithmic", value = FALSE)
 			),
 			h3("Parallel Plot"),
 			checkboxInput("drawParallel", label = "draw parallel plot", value = FALSE),
@@ -161,7 +163,6 @@ server <- function(input, output) {
 	
 
 	color_scale <- reactive({
-		print(paste("color:",input$colorscale))
 		input$colorscale
 	})
 
@@ -225,6 +226,26 @@ server <- function(input, output) {
 				NULL
 			}
 			
+
+			xaxis_opt = list(title=varx(), range=range_x)
+			yaxis_opt = list(title=vary(), range=range_y)
+
+			# apply log scales
+			if (input$xlog) { 
+				xaxis_opt["type"] <- "log"
+				print(xaxis_opt["range"])
+				margin <- (max_x() - min_x())/100
+				xaxis_opt["range"] <- c(log(min_x()-margin),log(max_x()+margin))
+			}
+			if (input$ylog) { 
+				yaxis_opt["type"] <- "log"
+				margin <- (max_y() - min_y())/100
+				yaxis_opt["range"] <- c(log(min_y()-margin),log(max_y()+margin))
+			}
+
+print(range_x)
+print(range_y)
+
 			plot_ly(
 				data=relevant_ds, 
 				x=relevant_ds[,varx()], 
@@ -235,14 +256,8 @@ server <- function(input, output) {
 				hoverinfo = "text",
 				text=tooltips()
 				) %>% layout( 
-					xaxis=list(
-						title=varx(),
-						range=range_x
-						), 
-					yaxis=list(
-						title=vary(),
-						range=range_y
-					)
+					xaxis=xaxis_opt, 
+					yaxis=yaxis_opt
 				)
 			
 		} else {
