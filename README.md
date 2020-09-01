@@ -1,7 +1,7 @@
 # plot-evolutionary-algo
 
 
-## What is it?
+## What is it?
 
 
 This small application takes the results of an [evolutionary algorithm](https://en.wikipedia.org/wiki/Evolutionary_algorithm) and plots its output with a Plotly interactive visualization.
@@ -16,16 +16,19 @@ It inherits the qualities of these components. It is notably agnostic to the pla
 ## Features 
 
 Basic features: 
-* a slider to explore the results of the evolutionary algorithm over iterations. Changing the slider affects all the plots on the page so they only display the results of the evolutionary algorithm in its current state. 
+* a slider to explore the results of the evolutionary algorithm over iterations. 
+   * Changing the slider affects all the plots on the page so they only display the results of the evolutionary algorithm in its current state.
+   * a "run" button allows for the visualization of the evolution over time
 * by default, a X,Y [scatter plot](https://en.wikipedia.org/wiki/Scatter_plot) using the two last columns of the dataset; on this plot, every point represents an individual tested by the evolutionary algorithm. 
 (likely the two last goals explored by the evolutionary algorithm).
    * the tooltip of the points on scatter plots display info on the values of the current individual on all the dimensions, in order to make it easier to understand the relationship between variables
    * the graph can be zoomed in, panned, exported into PNG
+   * the range of axis is automatically adapted according to all the iterations in order to compare easily the various generations
 
 Advanced features: 
 * Color the points of all the diagrams to add a dimension on them. The same color will be used on all the plots.
-* Scatter Plot Matrices (SPLOM) displaying all the combinations of variables (inputs, outputs)
-* Parallel Plot Diagrams to better understand the links between the various variables in the dataset
+* a Scatter Plot Matrices (SPLOM) displaying all the combinations of variables (inputs, outputs)
+* a Parallel Plot Diagrams to better understand the links between the various variables in the dataset
 
 
 # How to use it?
