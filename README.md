@@ -19,7 +19,8 @@ Basic features:
 * a slider to explore the results of the evolutionary algorithm over iterations. Changing the slider affects all the plots on the page so they only display the results of the evolutionary algorithm in its current state. 
 * by default, a X,Y [scatter plot](https://en.wikipedia.org/wiki/Scatter_plot) using the two last columns of the dataset; on this plot, every point represents an individual tested by the evolutionary algorithm. 
 (likely the two last goals explored by the evolutionary algorithm).
-* the tooltip of the points on scatter plots display info on the values of the current individual on all the dimensions, in order to make it easier to understand the relationship between variables
+   * the tooltip of the points on scatter plots display info on the values of the current individual on all the dimensions, in order to make it easier to understand the relationship between variables
+   * the graph can be zoomed in, panned, exported into PNG
 
 Advanced features: 
 * Color the points of all the diagrams to add a dimension on them. The same color will be used on all the plots.
