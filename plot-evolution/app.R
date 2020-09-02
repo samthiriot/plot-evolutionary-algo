@@ -11,17 +11,21 @@ list_csv_files <- function() {
 		list.files(path="..", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T)
 	)
 	# for every file, find the modication date
-	dates <- lapply(files, function(f) {
+	mdates <- lapply(files, function(f) {
 		#print(file.info(f))
 		file.info(f)$mtime 
+	})
+	cdates <- lapply(files, function(f) {
+		#print(file.info(f))
+		file.info(f)$ctime 
 	})
 	sizes <- sapply(files, function(f) {
 		file.info(f)$size 
 	})
 	# store into a dataframe
-	available_files <- data.frame(files, dates, sizes)
+	available_files <- data.frame(files, mdates, cdates, sizes)
 	colnames(available_files) <- c("file","datemodif","datecreate","size")
-	available_files <- available_files[order(available_files$datecreate),]
+	available_files <- available_files[order(available_files$datecreate,available_files$datemodif),]
 }
 
 files <- list_csv_files()
@@ -119,7 +123,7 @@ ui <- fluidPage(
 		mainPanel(
 			width = 9,
 			fluidRow(
-				column(10,offset = 2,
+				column(9,offset = 2,
 					sliderInput(
 						"sliderIteration", 
 						label = "Iteration", 
@@ -131,10 +135,10 @@ ui <- fluidPage(
 						width='100%'
 						)
 				),
-				column(10,offset = 2,
+				column(9,offset = 2,
 					textOutput(outputId = "infoFile")
 				),
-				column(10,offset = 2,
+				column(9,offset = 2,
 					textOutput(outputId = "infoIteration")
 				)			
 			),
