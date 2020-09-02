@@ -192,11 +192,11 @@ server <- function(input, output) {
 	var_color <- reactive({
 		color_idx <- color_idx()
 		if (color_idx==1) { 
-			print("no color!")
+			#print("no color!")
 			NULL
 		} else {
-			print("color")
-			print(ds_numeric_cols[color_idx])
+			#print("color")
+			#print(ds_numeric_cols[color_idx])
 			ds_numeric_cols[color_idx]
 		}
 	})
@@ -216,13 +216,16 @@ server <- function(input, output) {
 				as.list(as.integer(input$datatable_rows_selected)-1)
 			}
 		} else {
-			which(relevant_ds()$ID %in% as.integer(event.data$key))-1
+			as.list(which(relevant_ds()$ID %in% as.integer(event.data$key))-1)
 		}	
 	})
 
 	selected_keys_without_splom <- reactive({
 		event.data <- event_data(event = "plotly_selected", source = "plotScatter")
-
+	
+		#if (is.null(event.data)) {
+		#	event.data <- event_data(event = "plotly_brushing", source = "plotScatter")
+		#}
 		if (is.null(event.data)) {
 			if (is.null(input$datatable_rows_selected)) {
 				NULL
@@ -230,7 +233,7 @@ server <- function(input, output) {
 				as.list(as.integer(input$datatable_rows_selected)-1)
 			}
 		} else {
-			which(relevant_ds()$ID %in% as.integer(event.data$key))-1
+			as.list(which(relevant_ds()$ID %in% as.integer(event.data$key))-1)
 		}	
 	})
 
@@ -308,7 +311,6 @@ server <- function(input, output) {
 				NULL
 			}
 			
-
 			xaxis_opt = list(title=varx(), range=range_x)
 			yaxis_opt = list(title=vary(), range=range_y)
 
@@ -355,9 +357,7 @@ server <- function(input, output) {
 			) 
 			
 			
-		} else {
-			NULL
-		}
+		} else NULL
 	})
 
 	output$infoIteration <- renderText({
@@ -372,29 +372,29 @@ server <- function(input, output) {
 
 			dimensions <- as.list(
 				lapply(
-						ds_cols[2:length(ds_cols)], 
-						function(v) { 
+					ds_cols[2:length(ds_cols)], 
+					function(v) { 
 
-							if (is.numeric(relevant_ds[,v])) { 
-								list(label=v, values=relevant_ds[,v])
-							} else {
-								vv <- sort(unique(relevant_ds[,v]))
-								print("non numeric")
-								
-								cvals <- seq(1,length(vv)) - length(vv)/2
-								vals <- as.list(cvals)
-								names(vals) <- vv
-								
-								mappedvalues <- unlist(sapply(relevant_ds[,v], function(k) { vals[k] }), use.names=F)
-								
-								list(
-									label=v, 
-									tickvals=seq(1,length(vv)) - length(vv)/2, 
-									ticktext=vv,
-									values=mappedvalues
-									)
-							}
+						if (is.numeric(relevant_ds[,v])) { 
+							list(label=v, values=relevant_ds[,v])
+						} else {
+							vv <- sort(unique(relevant_ds[,v]))
+							print("non numeric")
+							
+							cvals <- seq(1,length(vv)) - length(vv)/2
+							vals <- as.list(cvals)
+							names(vals) <- vv
+							
+							mappedvalues <- unlist(sapply(relevant_ds[,v], function(k) { vals[k] }), use.names=F)
+							
+							list(
+								label=v, 
+								tickvals=seq(1,length(vv)) - length(vv)/2, 
+								ticktext=vv,
+								values=mappedvalues
+								)
 						}
+					}
 					)
 				)
 
@@ -430,28 +430,28 @@ server <- function(input, output) {
 
 			dimensions <- as.list(
 				lapply(
-						ds_cols[2:length(ds_cols)], 
-						function(v) { 
-							#if (is.numeric(relevant_ds[,v])) { 
-								list(label=v, values=relevant_ds[,v])
-							# } else {
-								# vv <- sort(unique(relevant_ds[,v]))
-								# print("non numeric")
-								
-								# cvals <- seq(1,length(vv)) - length(vv)/2
-								# vals <- as.list(cvals)
-								# names(vals) <- vv
-								
-								# mappedvalues <- unlist(sapply(relevant_ds[,v], function(k) { vals[k] }), use.names=F)
-								
-								# list(
-									# label=v, 
-									# tickvals=seq(1,length(vv)) - length(vv)/2, 
-									# ticktext=vv,
-									# values=mappedvalues
-									# )
-							# }
-						}
+					ds_cols[2:length(ds_cols)], 
+					function(v) { 
+						#if (is.numeric(relevant_ds[,v])) { 
+							list(label=v, values=relevant_ds[,v])
+						# } else {
+							# vv <- sort(unique(relevant_ds[,v]))
+							# print("non numeric")
+							
+							# cvals <- seq(1,length(vv)) - length(vv)/2
+							# vals <- as.list(cvals)
+							# names(vals) <- vv
+							
+							# mappedvalues <- unlist(sapply(relevant_ds[,v], function(k) { vals[k] }), use.names=F)
+							
+							# list(
+								# label=v, 
+								# tickvals=seq(1,length(vv)) - length(vv)/2, 
+								# ticktext=vv,
+								# values=mappedvalues
+								# )
+						# }
+					}
 					)
 				)
 				
@@ -459,25 +459,25 @@ server <- function(input, output) {
 			marker_opts <- if (is.null(var_color)) {
 				# no color
 				list(
-				  # color = as.integer(df$class),
-				  # colorscale = pl_colorscale,
-				  size = 5,
-				  line = list(
-					width = 1,
-					color = 'rgb(230,230,230)'
-				  )
+					# color = as.integer(df$class),
+					# colorscale = pl_colorscale,
+					size = 5,
+					line = list(
+						width = 1,
+						color = 'rgb(230,230,230)'
+					)
 				)
 			} else {
 				# with color!
 				list(
-				  color = relevant_ds[,color_idx()],
-				  colorscale=color_scale(),
-				  size = 5,
-				  line = list(
-					width = 1,
-					color = 'rgb(230,230,230)'
-				  ),
-				  showscale=T
+					color = relevant_ds[,color_idx()],
+					colorscale=color_scale(),
+					size = 5,
+					line = list(
+						width = 1,
+						color = 'rgb(230,230,230)'
+					),
+					showscale=T
 				)
 			}
 			
@@ -486,7 +486,6 @@ server <- function(input, output) {
 				zeroline=FALSE,
 				gridcolor='#ffff',
 				ticklen=4)
-
 			
 			sp <- selected_keys_without_splom()	
 			selectedpoints <- NULL 
@@ -494,7 +493,6 @@ server <- function(input, output) {
 				selectedpoints <- sp
 				marker_opts["opacity"] <- 0.3
 			}
-
 
 			plot_ly(
 				relevant_ds,
@@ -508,7 +506,7 @@ server <- function(input, output) {
 				text=tooltips(),
 				marker = marker_opts,
 				selected=attrs_selected(
-					opacity = 0.3,
+					opacity = 0.5,
 					marker = list(
 						size=7, 
 						color="red",
@@ -561,9 +559,7 @@ server <- function(input, output) {
 					),
 				rownames = FALSE
 			)
-		} else {
-			NULL
-		}
+		} else NULL
 	})
 
 
