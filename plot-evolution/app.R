@@ -115,10 +115,22 @@ ui <- fluidPage(
 			),
 			h3("scatter plot matrix"),
 			checkboxInput("drawSplom", label = "draw scatter plot matrix", value = FALSE),
+			conditionalPanel(
+				"input.drawSplom",
+				uiOutput("inputVariablesSplom")
+			),
 			h3("parallel plot"),
 			checkboxInput("drawParallel", label = "draw parallel plot", value = FALSE),
+			conditionalPanel(
+				"input.drawParallel",
+				uiOutput("inputVariablesParPlot")
+			),
 			h3("data table"),
-			checkboxInput("drawTable", label = "show data table", value = FALSE)
+			checkboxInput("drawTable", label = "show data table", value = FALSE),
+			conditionalPanel(
+				"input.drawTable",
+				uiOutput("inputVariablesTable")
+			)
 		),
 		
 		# Main panel for displaying outputs ----
@@ -387,9 +399,11 @@ server <- function(input, output) {
 			
 			relevant_ds <- relevant_ds()
 
+			validate(need(length(input$parPlotVariables)>=2, message="at least 2 variables should be select for a parallel plot diagram"))
+
 			dimensions <- as.list(
 				lapply(
-					ds_cols[2:length(ds_cols)], 
+					input$parPlotVariables,
 					function(v) { 
 
 						if (is.numeric(relevant_ds[,v])) { 
@@ -445,9 +459,11 @@ server <- function(input, output) {
 			
 			relevant_ds <- relevant_ds()
 
+			validate(need(length(input$splomVariables)>2, message="at least 3 variables should be select for a SPLOM"))
+
 			dimensions <- as.list(
 				lapply(
-					ds_cols[2:length(ds_cols)], 
+					input$splomVariables,#ds_cols[2:length(ds_cols)], 
 					function(v) { 
 						#if (is.numeric(relevant_ds[,v])) { 
 							list(label=v, values=relevant_ds[,v])
@@ -476,8 +492,6 @@ server <- function(input, output) {
 			marker_opts <- if (is.null(var_color)) {
 				# no color
 				list(
-					# color = as.integer(df$class),
-					# colorscale = pl_colorscale,
 					size = 5,
 					line = list(
 						width = 1,
@@ -557,6 +571,8 @@ server <- function(input, output) {
 
 		if (input$drawTable) {
 
+			validate(need(length(input$tableVariables)>2, message="please select at least two columns to visualize"))
+
 			relevant_ds <- relevant_ds()
 			
 			selected_keys <- selected_keys_without_table()
@@ -567,7 +583,7 @@ server <- function(input, output) {
 			}
 
 			datatable(
-			      	relevant_ds[,3:ncol(relevant_ds)-1],
+			      	relevant_ds[,input$tableVariables], #relevant_ds[,3:ncol(relevant_ds)-1],
 				selection = list(mode='multiple', selected = selected),
 				#server = FALSE,
 				options = list(
@@ -593,6 +609,32 @@ server <- function(input, output) {
 			"created on", as.character(displayed_file$date), 
 			"(", size, ")")
 	})
+
+
+	output$inputVariablesSplom <- renderUI({
+		selectInput(
+			"splomVariables", label = "show variables", 
+			choices = as.list(ds_cols[2:length(ds_cols)]),
+			selected = as.list(ds_cols[max(2, length(ds_cols)-4):length(ds_cols)]), # select by default up to 4 last columns
+			multiple = T)
+	})
+
+	output$inputVariablesParPlot <- renderUI({
+		selectInput(
+			"parPlotVariables", label = "show variables", 
+			choices = as.list(ds_cols[2:length(ds_cols)]),
+			selected = as.list(ds_cols[max(2, length(ds_cols)-6):length(ds_cols)]), # select by default up to 4 last columns
+			multiple = T)
+	})
+
+	output$inputVariablesTable <- renderUI({
+		selectInput(
+			"tableVariables", label = "show columns", 
+			choices = as.list(ds_cols[2:length(ds_cols)]),
+			selected = as.list(ds_cols[max(2, length(ds_cols)-8):length(ds_cols)]), # select by default up to 4 last columns
+			multiple = T)
+	})
+
 
 	output$bottomInfo <- renderUI({
 		tagList("LGPL-2.1 License. Update, track bug, contribute: ", 
