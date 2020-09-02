@@ -41,12 +41,20 @@ Advanced features:
 
 First copy the CSV file with the data to graph in the current directory.
 
-Open R:
+Then from R:
 ```R
-install.packages(c("plotly","shiny","DT"))
+#install.packages(c("plotly","shiny","DT"))
 library(shiny)
-runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+runGitHub("samthiriot/plot-evolutionary-algo", subdir="plot-evolution", destdir="./shiny-app")
 ```
+
+If there are many files in the current directory, you might want to specify the file you want to use
+```R
+library(shiny)
+options(plot.evolution.file=file_path_as_absolute("myfile.csv"))
+runGitHub("samthiriot/plot-evolutionary-algo", subdir="plot-evolution", destdir="./shiny-app")
+```
+
 
 # How to use it?
 

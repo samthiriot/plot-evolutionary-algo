@@ -10,21 +10,26 @@ list_csv_files <- function() {
 		list.files(path=".", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T),
 		list.files(path="..", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T)
 	)
+	print(files)
 	# for every file, find the modication date
 	mdates <- lapply(files, function(f) {
 		#print(file.info(f))
 		file.info(f)$mtime 
 	})
+	print(mdates)
 	cdates <- lapply(files, function(f) {
 		#print(file.info(f))
 		file.info(f)$ctime 
 	})
+	print(cdates)
 	sizes <- sapply(files, function(f) {
 		file.info(f)$size 
 	})
+	print(sizes)
 	# store into a dataframe
 	available_files <- data.frame(files, mdates, cdates, sizes)
 	colnames(available_files) <- c("file","datemodif","datecreate","size")
+	print(available_files)
 	available_files <- available_files[order(available_files$datecreate,available_files$datemodif),]
 }
 
@@ -78,7 +83,7 @@ ds_numeric_cols <- append(ds_numeric_vars, list("[no color]"=1),0)
 ui <- fluidPage(
 	
 	# App title ----
-	titlePanel(basename(displayed_file$file)),
+	titlePanel(basename(as.character(displayed_file$file))),
 
 	sidebarLayout(
 		position = "right",
@@ -596,7 +601,7 @@ server <- function(input, output) {
 			paste(size_mb, "Mb")			
 		}
 
-		tagList("displaying file", code(displayed_file$file), 
+		tagList("displaying file", code(as.character(displayed_file$file)), 
 			"created on", displayed_file$datecreate, 
 			"(", size, ")")
 	})
