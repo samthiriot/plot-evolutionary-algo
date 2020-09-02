@@ -28,11 +28,24 @@ list_csv_files <- function() {
 	available_files <- available_files[order(available_files$datecreate,available_files$datemodif),]
 }
 
-files <- list_csv_files()
-print("available files")
-print(files)
-displayed_file <- files[1,]
-displayed_filename <- as.character(displayed_file[,"file"])
+displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
+	# use the file provided by the user
+	inf <- file.info(getOption("plot.evolution.file"))
+	list(
+		file=getOption("plot.evolution.file"),
+		datecreate=inf$ctime,
+		datemodif=inf$mtime,
+		size=inf$size	
+	)
+} else {
+	print("detecting CSV files in the current directory...")
+	files <- list_csv_files()
+	print(paste(nrow(files), "available files"))
+	print(files)
+	files[1,]
+}
+
+displayed_filename <- as.character(displayed_file$file)
 print(paste("displaying",displayed_filename))
 
 # read the file 
@@ -65,7 +78,7 @@ ds_numeric_cols <- append(ds_numeric_vars, list("[no color]"=1),0)
 ui <- fluidPage(
 	
 	# App title ----
-	titlePanel(displayed_file$file),
+	titlePanel(basename(displayed_file$file)),
 
 	sidebarLayout(
 		position = "right",
@@ -73,7 +86,7 @@ ui <- fluidPage(
 			width = 3,
 			selectInput(
 				"colorvar", 
-				label = "Color", 
+				label = "color", 
 				choices = ds_numeric_cols, 
 				selected = 1
 			),
@@ -92,30 +105,26 @@ ui <- fluidPage(
 						selected = "Portland"
 						)
 			),
-			h3("Scatter Plot"),
+			h3("scatter plot"),
 			checkboxInput("drawScatter", label = "draw X,Y scatter plot", value = TRUE),
 			conditionalPanel(
 				"input.drawScatter",
-				selectInput(
-						"x", 
-						"X",
+				selectInput(	"x", "X",
 						choices = ds_vars[2:length(ds_vars)],
 						selected = length(ds_cols)-1
 						),
 				checkboxInput("xlog", label = "logarithmic", value = FALSE),
-				selectInput(
-						"y", 
-						"Y",
+				selectInput(	"y", "Y",
 						choices = ds_vars[2:length(ds_vars)],
 						selected = length(ds_cols)
 						),
 				checkboxInput("ylog", label = "logarithmic", value = FALSE)
 			),
-			h3("Parallel Plot"),
-			checkboxInput("drawParallel", label = "draw parallel plot", value = FALSE),
-			h3("Scatter Plot Matrix"),
+			h3("scatter plot matrix"),
 			checkboxInput("drawSplom", label = "draw scatter plot matrix", value = FALSE),
-			h3("Data Table"),
+			h3("parallel plot"),
+			checkboxInput("drawParallel", label = "draw parallel plot", value = FALSE),
+			h3("data table"),
 			checkboxInput("drawTable", label = "show data table", value = FALSE)
 		),
 		
@@ -136,7 +145,7 @@ ui <- fluidPage(
 						)
 				),
 				column(9,offset = 2,
-					textOutput(outputId = "infoFile")
+					uiOutput(outputId = "infoFile")
 				),
 				column(9,offset = 2,
 					textOutput(outputId = "infoIteration")
@@ -145,14 +154,14 @@ ui <- fluidPage(
 			conditionalPanel(
 				"input.drawScatter",
 				plotlyOutput(outputId = "scatterPlot", height='600px')
+			),			
+			conditionalPanel(
+				"input.drawSplom",
+				plotlyOutput(outputId = "splomPlot", height='600px')
 			),
 			conditionalPanel(
 				"input.drawParallel",
 				plotlyOutput(outputId = "parallelPlot", height='600px')
-			),
-			conditionalPanel(
-				"input.drawSplom",
-				plotlyOutput(outputId = "splomPlot", height='600px')
 			),
 			conditionalPanel(
 				"input.drawTable",
@@ -575,7 +584,7 @@ server <- function(input, output) {
 
 
 
-	output$infoFile <- renderText({
+	output$infoFile <- renderUI({
 		size_mb <- as.integer(displayed_file$size/1024/1024)
 		size <- if (size_mb < 0) {
 			paste(as.integer(displayed_file$size/1024), "Kb")
@@ -583,7 +592,7 @@ server <- function(input, output) {
 			paste(size_mb, "Mb")			
 		}
 
-		paste("displaying file", displayed_file$file, 
+		tagList("displaying file", a(displayed_file$file,href=paste("file://",displayed_file$file,sep="")), 
 			"created on", displayed_file$datecreate, 
 			"(", size, ")")
 	})
