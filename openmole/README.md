@@ -21,4 +21,46 @@ The steps to visualize an OpenMOLE exploration are:
 
 ## RTask packaging the script for OpenMOLE
 
-You can use this script to download 
+The file [interactive_plotting.oms](./interactive_plotting.oms) contains an OpenMOLE RTask you can reuse for your needs.
+It lists a given directory containing CSV files, joins them into one unique large CSV file, 
+then packages the application with the present application into a zip.
+
+We show in file [example_plot.oms](./example_plot.oms) an example of usage of the visualisation.
+
+```scala
+
+// import the RTask and the related variables 
+import _file_.interactive_plotting._
+
+// where to store the CSV files generated
+val relativePath = "results/SchafferN2"
+
+// the genetic evolution task 
+val evolutionSchafferN2 = NSGA2Evolution(...)
+
+
+// compute evolution on the test Function and write the CSV files in the directory
+(evolutionSchafferN2 hook (workDirectory/relativePath, keepAll=false)
+// then plot the last Pareto front
+) -- ( taskCreateVisuApp set ( 
+	    directoryWithResults := workDirectory / relativePath
+	) hook CopyFileHook(
+	    fileVisuApp, workDirectory/"evolutionShiny.zip" 
+	) hook CopyFileHook(
+	    fileConcatenatedCSV, workDirectory/"SchafferN2-concatenated.csv" 
+	)
+)
+```
+
+## Run the Shiny application
+
+Once the Shiny application was produced (the zip file), you have to *download* this zip file.
+
+Then you have to start R in the same directory, then ask Shiny to run it: 
+```R
+library(shiny)
+runUrl("file://evolutionShiny.zip")
+```
+
+See [the other docs](../README.md) for more options.
+

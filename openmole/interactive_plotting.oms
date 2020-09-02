@@ -1,0 +1,82 @@
+
+// inputs
+// ... the directory containing the CSV files 
+val directoryWithResults = Val[File]
+
+// outputs 
+// ... the CSV file containing the concatenation of all the indivudual CSV files 
+val fileConcatenatedCSV = Val[File]
+// ... the zip file containing the app with the data and the visualization script 
+val fileVisuApp = Val[File]
+
+val taskCreateVisuApp = RTask("""
+    d <- "mydirectory"
+    if (!dir.exists(d)) error("directory not found")
+    
+    print("concatenating the CSV files...")
+    source("prepare_data.R")
+    pop <- contatenate_files(d)
+    if (is.null(pop)) error("no CSV file found")
+    
+    dir.create("/tmp/app")
+
+    print("saving the files into a unique CSV file...")
+    write.csv(pop, file="/tmp/app/concatenated.csv", row.names=F)
+    rm(pop)
+    
+    print("retrieving the app from the last version")
+    downloadissue <- 1
+    downloadissue <- tryCatch(
+        download.file(
+            url="https://raw.githubusercontent.com/samthiriot/plot-evolutionary-algo/master/plot-evolution/app.R",
+            destfile="/tmp/app/app.R",
+            quiet=T
+            ),
+            error = function(e) { 1 }
+            )
+    if (downloadissue) {
+        print("unable to download the last version from github, using the local cache")
+        file.copy("app.R", "/tmp/app/app.R")
+    }
+    
+    print("zipping the shiny app")
+    library(zip)
+    lf <- list.files("/tmp/app/", recursive=T, include.dirs=F)
+    setwd("/tmp/app/")
+    print(lf)
+    zip("/tmp/shiny_app.zip", lf)
+    
+    print('download the CSV file somewhere, then start R in the same directory, and use:')
+    print('   #install.packages(c("plotly","shiny","DT")) # uncomment if packages are missing')
+    print('   library(shiny)')
+    print('   runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution-tmp")')
+    print('')
+    print('or download the zip file produced by the task, then unzip it, and run in R')
+    print('   #install.packages(c("plotly","shiny","DT")) # uncomment if packages are missing')
+    print('   library(shiny)')
+    print('   runApp("plot-evolution")')
+
+    """,
+        install = Seq(
+        "fakeroot sed -i 's/deb.debian.org/linux.pleiade.edf.fr/g' /etc/apt/sources.list",
+        "fakeroot cat /etc/apt/sources.list",
+        // update the list of available packages
+        "fakeroot apt-get -o Acquire::http::proxy=false update ",
+        // required; attempts to update dbus to a newer version would require permissions we do not have
+        "DEBIAN_FRONTEND=noninteractive fakeroot apt-mark hold dbus", 
+        """echo "dbus hold" | fakeroot dpkg --set-selections""",
+        // install the libs required for the compilation of R packages
+        "DEBIAN_FRONTEND=noninteractive fakeroot apt-get install -o Acquire::http::proxy=false -y libssl-dev libcurl4-openssl-dev libudunits2-dev",
+        // install required R packages in their binary version (quicker, much stable!)
+        "DEBIAN_FRONTEND=noninteractive fakeroot apt-get install -o Acquire::http::proxy=false -y r-cran-plotly r-cran-zip"
+        ),
+    libraries = Seq() // were installed with the binary version earlier
+) set (
+    inputFiles += (directoryWithResults, "mydirectory"),
+    outputFiles += ("/tmp/app/concatenated.csv", fileConcatenatedCSV),
+    outputFiles += ("/tmp/shiny_app.zip", fileVisuApp),
+    resources += workDirectory / "resources/prepare_data.R",
+    resources += workDirectory / "resources/app.R",
+    directoryWithResults := workDirectory / "multiobjective/results/ConstrEx"
+)
+
