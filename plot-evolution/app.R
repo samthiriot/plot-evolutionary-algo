@@ -282,11 +282,11 @@ server <- function(input, output) {
 			marker_opts <- if (is.null(var_color)) {
 				# no color
 				list(
-					size=7
+					size=6
 					)
 			} else {
 				list(
-					size=7, 
+					size=6, 
 					color=relevant_ds[,color_idx()],
 					showscale=T,
 					colorscale=color_scale()
@@ -461,7 +461,7 @@ server <- function(input, output) {
 				list(
 				  # color = as.integer(df$class),
 				  # colorscale = pl_colorscale,
-				  size = 7,
+				  size = 5,
 				  line = list(
 					width = 1,
 					color = 'rgb(230,230,230)'
@@ -472,7 +472,7 @@ server <- function(input, output) {
 				list(
 				  color = relevant_ds[,color_idx()],
 				  colorscale=color_scale(),
-				  size = 7,
+				  size = 5,
 				  line = list(
 					width = 1,
 					color = 'rgb(230,230,230)'
@@ -508,8 +508,9 @@ server <- function(input, output) {
 				text=tooltips(),
 				marker = marker_opts,
 				selected=attrs_selected(
+					opacity = 0.3,
 					marker = list(
-						size=8, 
+						size=7, 
 						color="red",
 						opacity = 1.0
 						)
