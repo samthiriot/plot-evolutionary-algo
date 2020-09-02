@@ -1,7 +1,9 @@
+
 library(shiny)
 library(plotly)
 library(DT)
 
+# first list the files available around
 list_csv_files <- function() {
 	# first read the list of available files here and there
 	files <- c(
@@ -29,6 +31,7 @@ displayed_file <- files[1,]
 displayed_filename <- as.character(displayed_file[,"file"])
 print(paste("displaying",displayed_filename))
 
+# read the file 
 ds <- read.csv(file=displayed_filename, header=T) #, nrow=1000
 ds$ID <- row.names(ds) #seq.int(nrow(ds))
 
@@ -42,7 +45,7 @@ names(ds_vars) <- ds_cols
 
 # identify numeric columns
 ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
-ds_numeric_cols <- sort(ds_numeric_cols[1:length(ds_numeric_cols)])
+ds_numeric_cols <- ds_numeric_cols[1:length(ds_numeric_cols)]
 ds_numeric_vars <- as.list(seq(1,length(ds_numeric_cols)))
 names(ds_numeric_vars) <- ds_numeric_cols
 # (without the iteration column)
@@ -63,6 +66,7 @@ ui <- fluidPage(
 	sidebarLayout(
 		position = "right",
 		sidebarPanel(
+			width = 3,
 			selectInput(
 				"colorvar", 
 				label = "Color", 
@@ -113,6 +117,7 @@ ui <- fluidPage(
 		
 		# Main panel for displaying outputs ----
 		mainPanel(
+			width = 9,
 			fluidRow(
 				column(10,offset = 2,
 					sliderInput(
@@ -277,7 +282,7 @@ server <- function(input, output) {
 
 		if (input$drawScatter) {
 
-			print(paste("iteration", iteration()))
+			#print(paste("iteration", iteration()))
 			
 			relevant_ds <- relevant_ds()
 			
@@ -361,7 +366,9 @@ server <- function(input, output) {
 	})
 
 	output$infoIteration <- renderText({
-		paste(nrow(relevant_ds()), "points in the Pareto front at iteration", iteration())
+		l <- length(selected_keys_without_table())
+		selectedtxt <- if (l > 1) paste("(", l, "points selected",")") else if (l == 1) "( 1 point selected )" else "" 
+		paste(nrow(relevant_ds()), "points in the Pareto front at iteration", iteration(), selectedtxt)
 	})
 	 
 	output$parallelPlot <- renderPlotly({
