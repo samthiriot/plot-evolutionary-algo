@@ -43,7 +43,7 @@ print(paste("displaying",displayed_filename))
 
 # read the file 
 ds <- read.csv(file=displayed_filename, header=T) #, nrow=1000
-ds$ID <- row.names(ds) #seq.int(nrow(ds))
+ds$ID <- row.names(ds) 
 
 ds_iteration_max <- max(ds$evolution.generation)
 
@@ -56,12 +56,8 @@ names(ds_vars) <- ds_cols
 # identify numeric columns
 ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
 ds_numeric_cols <- ds_numeric_cols[1:length(ds_numeric_cols)]
-ds_numeric_vars <- as.list(seq(1,length(ds_numeric_cols)))
-names(ds_numeric_vars) <- ds_numeric_cols
-# (without the iteration column)
-ds_numeric_vars <- ds_numeric_vars[2:length(ds_numeric_vars)]
 # append the "nothing" choice
-ds_numeric_cols <- append(ds_numeric_vars, list("[no color]"=1),0)
+ds_numeric_cols <- append(ds_numeric_cols[2:length(ds_numeric_cols)], list("[no color]"=1),0)
 
 # ideas
 # https://deanattali.com/blog/advanced-shiny-tips/
@@ -158,7 +154,7 @@ ui <- fluidPage(
 			),
 			conditionalPanel(
 				"input.drawScatter",
-				plotlyOutput(outputId = "scatterPlot", height='600px'),
+				plotlyOutput(outputId = "scatterPlot", height='550px'),
 				hr()
 			),			
 			conditionalPanel(
@@ -168,7 +164,7 @@ ui <- fluidPage(
 			),
 			conditionalPanel(
 				"input.drawParallel",
-				plotlyOutput(outputId = "parallelPlot", height='600px'),
+				plotlyOutput(outputId = "parallelPlot", height='550px'),
 				hr()
 			),
 			conditionalPanel(
@@ -213,18 +209,14 @@ server <- function(input, output) {
 		max(ds[,as.integer(input$y)])
 	})
 	
-	color_idx <- reactive({
-		as.integer(input$colorvar)
-	})
 	var_color <- reactive({
-		color_idx <- color_idx()
-		if (color_idx==1) { 
+		if (input$colorvar=="1") { 
 			#print("no color!")
 			NULL
 		} else {
 			#print("color")
-			#print(ds_numeric_cols[color_idx])
-			ds_numeric_cols[color_idx]
+			#print(input$colorvar)
+			input$colorvar
 		}
 	})
 	
@@ -312,12 +304,12 @@ server <- function(input, output) {
 			marker_opts <- if (is.null(var_color)) {
 				# no color
 				list(
-					size=6
+					size=7
 					)
 			} else {
 				list(
-					size=6, 
-					color=relevant_ds[,color_idx()],
+					size=7, 
+					color=relevant_ds[,var_color],
 					showscale=T,
 					colorscale=color_scale()
 					)
@@ -435,7 +427,7 @@ server <- function(input, output) {
 				list()
 			} else {
 				list(
-					color=relevant_ds[,color_idx()],
+					color=relevant_ds[,var_color],
 					showscale = TRUE,
 					colorscale=color_scale()
 					)
@@ -463,27 +455,9 @@ server <- function(input, output) {
 
 			dimensions <- as.list(
 				lapply(
-					input$splomVariables,#ds_cols[2:length(ds_cols)], 
+					input$splomVariables, 
 					function(v) { 
-						#if (is.numeric(relevant_ds[,v])) { 
-							list(label=v, values=relevant_ds[,v])
-						# } else {
-							# vv <- sort(unique(relevant_ds[,v]))
-							# print("non numeric")
-							
-							# cvals <- seq(1,length(vv)) - length(vv)/2
-							# vals <- as.list(cvals)
-							# names(vals) <- vv
-							
-							# mappedvalues <- unlist(sapply(relevant_ds[,v], function(k) { vals[k] }), use.names=F)
-							
-							# list(
-								# label=v, 
-								# tickvals=seq(1,length(vv)) - length(vv)/2, 
-								# ticktext=vv,
-								# values=mappedvalues
-								# )
-						# }
+						list(label=v, values=relevant_ds[,v])
 					}
 					)
 				)
@@ -492,7 +466,7 @@ server <- function(input, output) {
 			marker_opts <- if (is.null(var_color)) {
 				# no color
 				list(
-					size = 5,
+					size = 6,
 					line = list(
 						width = 1,
 						color = 'rgb(230,230,230)'
@@ -501,9 +475,9 @@ server <- function(input, output) {
 			} else {
 				# with color!
 				list(
-					color = relevant_ds[,color_idx()],
+					color = relevant_ds[,var_color],
 					colorscale=color_scale(),
-					size = 5,
+					size = 6,
 					line = list(
 						width = 1,
 						color = 'rgb(230,230,230)'
@@ -599,7 +573,7 @@ server <- function(input, output) {
 
 	output$infoFile <- renderUI({
 		size_mb <- as.integer(displayed_file$size/1024/1024)
-		size <- if (size_mb < 0) {
+		size <- if (size_mb <= 0) {
 			paste(as.integer(displayed_file$size/1024), "Kb")
 		} else {
 			paste(size_mb, "Mb")			
