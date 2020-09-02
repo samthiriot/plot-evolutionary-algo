@@ -2,7 +2,34 @@ library(shiny)
 library(plotly)
 library(DT)
 
-ds <- read.csv(file="../concatenated.csv", header=T) #, nrow=1000
+list_csv_files <- function() {
+	# first read the list of available files here and there
+	files <- c(
+		list.files(path=".", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T),
+		list.files(path="..", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T)
+	)
+	# for every file, find the modication date
+	dates <- lapply(files, function(f) {
+		#print(file.info(f))
+		file.info(f)$mtime 
+	})
+	sizes <- sapply(files, function(f) {
+		file.info(f)$size 
+	})
+	# store into a dataframe
+	available_files <- data.frame(files, dates, sizes)
+	colnames(available_files) <- c("file","datemodif","datecreate","size")
+	available_files <- available_files[order(available_files$datecreate),]
+}
+
+files <- list_csv_files()
+print("available files")
+print(files)
+displayed_file <- files[1,]
+displayed_filename <- as.character(displayed_file[,"file"])
+print(paste("displaying",displayed_filename))
+
+ds <- read.csv(file=displayed_filename, header=T) #, nrow=1000
 ds$ID <- row.names(ds) #seq.int(nrow(ds))
 
 ds_iteration_max <- max(ds$evolution.generation)
@@ -31,7 +58,7 @@ ds_numeric_cols <- append(ds_numeric_vars, list("[no color]"=1),0)
 ui <- fluidPage(
 	
 	# App title ----
-	titlePanel("Evolution"),
+	titlePanel(displayed_file$file),
 
 	sidebarLayout(
 		position = "right",
@@ -100,8 +127,11 @@ ui <- fluidPage(
 						)
 				),
 				column(10,offset = 2,
+					textOutput(outputId = "infoFile")
+				),
+				column(10,offset = 2,
 					textOutput(outputId = "infoIteration")
-				)
+				)			
 			),
 			conditionalPanel(
 				"input.drawScatter",
@@ -119,6 +149,7 @@ ui <- fluidPage(
 				"input.drawTable",
 				DTOutput(outputId = "datatable")
 			)
+
 		)
 	)
 	
@@ -532,6 +563,21 @@ server <- function(input, output) {
 		} else {
 			NULL
 		}
+	})
+
+
+
+	output$infoFile <- renderText({
+		size_mb <- as.integer(displayed_file$size/1024/1024)
+		size <- if (size_mb < 0) {
+			paste(as.integer(displayed_file$size/1024), "Kb")
+		} else {
+			paste(size_mb, "Mb")			
+		}
+
+		paste("displaying file", displayed_file$file, 
+			"created on", displayed_file$datecreate, 
+			"(", size, ")")
 	})
 
 

@@ -42,7 +42,11 @@ Advanced features:
 
 ## Input Data
 
-The input data format is a simple [CSV](https://fr.wikipedia.org/wiki/Comma-separated_values) file provided as a file named `concatenated.csv`.
+The input data format is a simple [CSV](https://fr.wikipedia.org/wiki/Comma-separated_values) file.
+At start, the application will list the files having extension `.csv` available both inside the current directory 
+and inside the directory of the application.
+It will select the file which was produced last. 
+The filename and date are displayed for verification in the app. 
 
 The first column is expected to contain the current generation or iteration. 
 The next columns contain the inputs and outputs. 
