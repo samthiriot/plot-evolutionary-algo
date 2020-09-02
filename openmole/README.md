@@ -25,6 +25,8 @@ The file [interactive_plotting.oms](./interactive_plotting.oms) contains an Open
 It lists a given directory containing CSV files, joins them into one unique large CSV file, 
 then packages the application with the present application into a zip.
 
+To use them, copy the content of this directory (at least `interactive_plotting.oms` and the `resources` directory) into your OpenMOLE working directory. 
+
 We show in file [example_plot.oms](./example_plot.oms) an example of usage of the visualisation.
 
 ```scala
