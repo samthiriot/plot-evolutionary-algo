@@ -19,7 +19,7 @@ list_csv_files <- function() {
 	# store into a dataframe
 	available_files <- data.frame(files, fi_maxdate, fi$size)
 	colnames(available_files) <- c("file","date","size")
-	available_files <- available_files[order(available_files$date),]
+	available_files <- available_files[rev(order(available_files$date)),]
 }
 
 displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
