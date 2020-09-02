@@ -3,10 +3,11 @@
 
 ## What is it?
 
-
 This small application takes the results of an [evolutionary algorithm](https://en.wikipedia.org/wiki/Evolutionary_algorithm) and plots its output with a Plotly interactive visualization.
 It intends to help a user of such an algorithm to understand what happens during the evolution and to deal with the many dimensions.
 It is also supposed to be very simple at first glance, yet to also enable more sophisticated plots with a bit of parameter tuning.
+
+Have a look to the live demo: [samthiriot.shinyapps.io/plot-evolution/](https://samthiriot.shinyapps.io/plot-evolution/)
 
 This small app is standing on the shoulders of giants: [Plotly](https://plotly.com/) to build interactive diagrams, [R](https://www.r-project.org/) for data processing, [Shiny](https://shiny.rstudio.com/) to display the interactive graphs from R as web pages. 
 
@@ -45,15 +46,15 @@ Then from R:
 ```R
 #install.packages(c("plotly","shiny","DT"))
 library(shiny)
-#runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution")
-runGitHub("samthiriot/plot-evolutionary-algo", subdir="plot-evolution", destdir="./shiny-app")
+runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution-tmp")
 ```
 
-If there are many files in the current directory, you might want to specify the file you want to use
+To force the usage of a given file, you might use:
 ```R
 library(shiny)
+library(tools)
 options(plot.evolution.file=file_path_as_absolute("myfile.csv"))
-runGitHub("samthiriot/plot-evolutionary-algo", subdir="plot-evolution", destdir="./shiny-app")
+runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution-tmp")
 ```
 
 
@@ -138,15 +139,23 @@ The simplest way to test it is: *first copy the CSV file you want to plot in the
 Then in R:
 ```R
 library(shiny)
-runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+options(plot.evolution.file=file_path_as_absolute("myfile.csv"))
+runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution-tmp")
 ```
 This should open your default web browser on an HTML page computed locally. 
 
 you might precise the file to load:
 ```R
 library(shiny)
+library(tools)
 options(plot.evolution.file=file_path_as_absolute("myfile.csv"))
-runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution-tmp")
+```
+
+You might also download or clone this repository, then run from the root of the repository like:
+```R
+library(shiny)
+runApp("plot-evolution")
 ```
 
 For more details on launch, see our script [launch.R](./launch.R)
