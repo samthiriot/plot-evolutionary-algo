@@ -105,7 +105,7 @@ runApp("plot-evolution")
 
 This should open your default web browser on an HTML page computed locally. 
 
-for a more complete launch script, use the file (launch.R)[./launch.R]
+for a more complete launch script, use the file [launch.R](./launch.R)
  
 ## Integration with OpenMOLE
 
