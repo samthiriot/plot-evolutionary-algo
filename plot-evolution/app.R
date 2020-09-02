@@ -10,27 +10,16 @@ list_csv_files <- function() {
 		list.files(path=".", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T),
 		list.files(path="..", pattern = "\\.csv$", ignore.case=T, include.dirs=F, full.names=T)
 	)
-	print(files)
-	# for every file, find the modication date
-	mdates <- lapply(files, function(f) {
-		#print(file.info(f))
-		file.info(f)$mtime 
-	})
-	print(mdates)
-	cdates <- lapply(files, function(f) {
-		#print(file.info(f))
-		file.info(f)$ctime 
-	})
-	print(cdates)
-	sizes <- sapply(files, function(f) {
-		file.info(f)$size 
-	})
-	print(sizes)
+	if (!length(files)) {
+		stop(paste("no CSV file found in current directory", getwd(), "; please copy a CSV file in the working directory, or specific the file to read using \nlibrary(tools) \n options(plot.evolution.file=file_path_as_absolute(\"myfile.csv\"))"))
+	}	
+	# read the info from files
+	fi <- file.info(files)
+	fi_maxdate <- apply(fi, 1, function (d) { if (d["mtime"]>d["ctime"]) d["mtime"] else d["ctime"]  })
 	# store into a dataframe
-	available_files <- data.frame(files, mdates, cdates, sizes)
-	colnames(available_files) <- c("file","datemodif","datecreate","size")
-	print(available_files)
-	available_files <- available_files[order(available_files$datecreate,available_files$datemodif),]
+	available_files <- data.frame(files, fi_maxdate, fi$size)
+	colnames(available_files) <- c("file","date","size")
+	available_files <- available_files[order(available_files$date),]
 }
 
 displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
@@ -38,8 +27,7 @@ displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
 	inf <- file.info(getOption("plot.evolution.file"))
 	list(
 		file=getOption("plot.evolution.file"),
-		datecreate=inf$ctime,
-		datemodif=inf$mtime,
+		date=if (inf$ctime > inf$mtime) inf$ctime else inf$mtime,
 		size=inf$size	
 	)
 } else {
@@ -602,7 +590,7 @@ server <- function(input, output) {
 		}
 
 		tagList("displaying file", code(as.character(displayed_file$file)), 
-			"created on", displayed_file$datecreate, 
+			"created on", as.character(displayed_file$date), 
 			"(", size, ")")
 	})
 

@@ -45,6 +45,7 @@ Then from R:
 ```R
 #install.packages(c("plotly","shiny","DT"))
 library(shiny)
+#runUrl("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip", destdir="./plot-evolution")
 runGitHub("samthiriot/plot-evolutionary-algo", subdir="plot-evolution", destdir="./shiny-app")
 ```
 
