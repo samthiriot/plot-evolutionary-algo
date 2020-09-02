@@ -20,3 +20,4 @@ rm -rf /tmp/build-shiny-app
 
 ls -lah $FILENAME.zip
 
+echo "also mind updating https://www.shinyapps.io/admin/#/dashboard"
