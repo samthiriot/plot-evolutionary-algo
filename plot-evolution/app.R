@@ -153,23 +153,27 @@ ui <- fluidPage(
 			),
 			conditionalPanel(
 				"input.drawScatter",
-				plotlyOutput(outputId = "scatterPlot", height='600px')
+				plotlyOutput(outputId = "scatterPlot", height='600px'),
+				hr()
 			),			
 			conditionalPanel(
 				"input.drawSplom",
-				plotlyOutput(outputId = "splomPlot", height='600px')
+				plotlyOutput(outputId = "splomPlot", height='600px'),
+				hr()
 			),
 			conditionalPanel(
 				"input.drawParallel",
-				plotlyOutput(outputId = "parallelPlot", height='600px')
+				plotlyOutput(outputId = "parallelPlot", height='600px'),
+				hr()
 			),
 			conditionalPanel(
 				"input.drawTable",
-				DTOutput(outputId = "datatable")
+				DTOutput(outputId = "datatable"),
+				hr()
 			)
-
 		)
-	)
+	),
+	uiOutput(outputId = "bottomInfo")
 	
 )
 
@@ -592,9 +596,14 @@ server <- function(input, output) {
 			paste(size_mb, "Mb")			
 		}
 
-		tagList("displaying file", a(displayed_file$file,href=paste("file://",displayed_file$file,sep="")), 
+		tagList("displaying file", code(displayed_file$file), 
 			"created on", displayed_file$datecreate, 
 			"(", size, ")")
+	})
+
+	output$bottomInfo <- renderUI({
+		tagList("LGPL-2.1 License. Update, track bug, contribute: ", 
+			a("github.com/samthiriot/plot-evolutionary-algo",href="https://github.com/samthiriot/plot-evolutionary-algo",target="_blank"))
 	})
 
 
