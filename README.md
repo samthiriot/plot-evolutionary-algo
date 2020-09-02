@@ -37,6 +37,17 @@ Advanced features:
 ![Advanced Features: SPLOM](./doc/screenshot-splom.png)
 
 
+# Quickstart
+
+First copy the CSV file with the data to graph in the current directory.
+
+Open R:
+```R
+install.packages(c("plotly","shiny","DT"))
+library(shiny)
+runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+```
+
 # How to use it?
 
 
@@ -93,23 +104,57 @@ Here is an example of syntax
 18,0.803362888326028,2.7062551867406,0.803362888326028,4.61342593813781
 ```
 
-## Start it manually
+## Install R dependancies
 
-This is a Shiny application. 
-So you can use it like
+A few R packages are necessary for this mini app, namely `plotly`, `DT` and `shiny`. 
+You can install them in several ways (see [the official doc](https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Installing-packages)). 
 
+Directly in R:
 ```R
-library(plotly)
-runApp("plot-evolution")
+install.packages(c("plotly","shiny","DT"))
 ```
 
+If you are using a GNU/Linux distribution, use your package manager.
+For instance for Debian/Ubuntu/Mint:
+```
+sudo apt install r-cran-plotly r-cran-DT r-cran-shiny
+```
+
+
+## Start it quickly
+
+This is a Shiny application so it can be used as any other Shiny app.
+
+The simplest way to test it is: *first copy the CSV file you want to plot in the current directory*. 
+Then in R:
+```R
+library(shiny)
+runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+```
 This should open your default web browser on an HTML page computed locally. 
 
-for a more complete launch script, use the file [launch.R](./launch.R)
- 
+you might precise the file to load:
+```R
+library(shiny)
+options(plot.evolution.file=file_path_as_absolute("myfile.csv"))
+runApp("https://github.com/samthiriot/plot-evolutionary-algo/releases/latest/download/shiny-app.zip")
+```
+
+For more details on launch, see our script [launch.R](./launch.R)
+
+
 ## Integration with OpenMOLE
 
-TODO
+[OpenMOLE](https://github.com/openmole/openmole) is a scientific computing soft 
+dedicated to the exploration of the dynamics of simulations.
+Among other features, OpenMOLE offers [calibration features](https://next.openmole.org/Calibration.html) based 
+on [genetic algorithms](https://next.openmole.org/Genetic+Algorithms.html).
+
+A genetic algorithm in OpenMOLE generates one CSV file per generation.
+In order to visualize such a result, the best is to first merge the resulting CSV files,
+then to download the results and open them with this app. 
+
+We show in the [openmole](./openmole) directory examples of how to make this.
 
 # Advanced usage
 
