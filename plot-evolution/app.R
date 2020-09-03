@@ -64,7 +64,7 @@ ds_numeric_cols <- append(ds_numeric_cols[2:length(ds_numeric_cols)], list("[no 
 
 
 # Define UI for app that draws a histogram ----
-ui <- fluidPage(
+ui <- function(request) {fluidPage(
 	
 	# App title ----
 	titlePanel(basename(as.character(displayed_file$file))),
@@ -126,7 +126,8 @@ ui <- fluidPage(
 			conditionalPanel(
 				"input.drawTable",
 				uiOutput("inputVariablesTable")
-			)
+			),
+		        bookmarkButton()
 		),
 		
 		# Main panel for displaying outputs ----
@@ -176,11 +177,18 @@ ui <- fluidPage(
 	),
 	uiOutput(outputId = "bottomInfo")
 	
-)
+)}
 
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+	# excluse from bookmark the useless values
+	setBookmarkExclude(c("plotly_relayout-plotScatter", "plotly_hover-plotScatter", "plotly_afterplot-plotScatter",
+				"plotly_afterplot-plotParallel",
+				"plotly_afterplot-plotSplom",
+				"datatable_rows_current","datatable_cells_selected","datatable_cell_clicked","datatable_rows_selected","datatable_rows_all","datatable_columns_selected","datatable_search","datatable_state",
+				".clientValue-default-plotlyCrosstalkOpts"))
 
 	varx <- reactive({
 		ds_cols[as.integer(input$x)]
@@ -594,10 +602,11 @@ server <- function(input, output) {
 	})
 
 	output$inputVariablesParPlot <- renderUI({
+		print(input)
 		selectInput(
 			"parPlotVariables", label = "show variables", 
 			choices = as.list(ds_cols[2:length(ds_cols)]),
-			selected = as.list(ds_cols[max(2, length(ds_cols)-6):length(ds_cols)]), # select by default up to 4 last columns
+			selected = as.list(ds_cols[max(2, length(ds_cols)-8):length(ds_cols)]), # select by default up to 4 last columns
 			multiple = T)
 	})
 
@@ -605,7 +614,7 @@ server <- function(input, output) {
 		selectInput(
 			"tableVariables", label = "show columns", 
 			choices = as.list(ds_cols[2:length(ds_cols)]),
-			selected = as.list(ds_cols[max(2, length(ds_cols)-8):length(ds_cols)]), # select by default up to 4 last columns
+			selected = as.list(ds_cols[max(2, length(ds_cols)-12):length(ds_cols)]), # select by default up to 4 last columns
 			multiple = T)
 	})
 
@@ -618,5 +627,5 @@ server <- function(input, output) {
 
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, enableBookmarking = "url")
 
