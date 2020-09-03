@@ -22,7 +22,7 @@ list_csv_files <- function() {
 	available_files <- available_files[rev(order(available_files$date)),]
 }
 
-displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
+default_displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
 	# use the file provided by the user
 	inf <- file.info(getOption("plot.evolution.file"))
 	list(
@@ -38,26 +38,12 @@ displayed_file <- if (!is.null(getOption("plot.evolution.file"))) {
 	files[1,]
 }
 
-displayed_filename <- as.character(displayed_file$file)
-print(paste("displaying",displayed_filename))
+default_displayed_filename <- as.character(default_displayed_file$file)
+print(paste("displaying by default",default_displayed_filename))
 
-# read the file 
-ds <- read.csv(file=displayed_filename, header=T) #, nrow=1000
-ds$ID <- row.names(ds) 
-
-ds_iteration_max <- max(ds$evolution.generation)
-
-ds_cols <- colnames(ds)
-ds_cols <- ds_cols[1:length(ds_cols)-1]
-
-ds_vars <- as.list(seq(1,length(ds_cols)))
-names(ds_vars) <- ds_cols
-
-# identify numeric columns
-ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
-ds_numeric_cols <- ds_numeric_cols[1:length(ds_numeric_cols)]
-# append the "nothing" choice
-ds_numeric_cols <- append(ds_numeric_cols[2:length(ds_numeric_cols)], list("[no color]"=1),0)
+# read the default file 
+default_ds <- read.csv(file=default_displayed_filename, header=T) #, nrow=1000
+default_ds$ID <- row.names(default_ds) 
 
 # ideas
 # https://deanattali.com/blog/advanced-shiny-tips/
@@ -67,22 +53,24 @@ ds_numeric_cols <- append(ds_numeric_cols[2:length(ds_numeric_cols)], list("[no 
 ui <- function(request) {fluidPage(
 	
 	# App title ----
-	titlePanel(basename(as.character(displayed_file$file))),
-
+	uiOutput("titlePanel"),
+	
 	sidebarLayout(
 		position = "right",
 		sidebarPanel(
 			width = 3,
-			selectInput(
-				"colorvar", 
-				label = "color", 
-				choices = ds_numeric_cols, 
-				selected = 1
-			),
+			fileInput(
+				"uploadedFile", "upload CSV", 
+				multiple = FALSE, 
+				accept =  c(
+				  "text/csv",
+				  "text/comma-separated-values,text/plain",
+				  ".csv"), 
+				width = NULL),
+			uiOutput("inputColorVar"),
 			conditionalPanel(
 				"input.colorvar!='1'",
-				selectInput(
-						"colorscale", 
+				selectInput(	"colorscale", 
 						"scale",
 						# from https://plotly.com/r/reference/#heatmap-colorscale
 						choices = list("YlGnBu","YlOrRd","Bluered",
@@ -98,15 +86,9 @@ ui <- function(request) {fluidPage(
 			checkboxInput("drawScatter", label = "draw X,Y scatter plot", value = TRUE),
 			conditionalPanel(
 				"input.drawScatter",
-				selectInput(	"x", "X",
-						choices = ds_vars[2:length(ds_vars)],
-						selected = length(ds_cols)-1
-						),
+				uiOutput("inputScatterX"),
 				checkboxInput("xlog", label = "logarithmic", value = FALSE),
-				selectInput(	"y", "Y",
-						choices = ds_vars[2:length(ds_vars)],
-						selected = length(ds_cols)
-						),
+				uiOutput("inputScatterY"),
 				checkboxInput("ylog", label = "logarithmic", value = FALSE)
 			),
 			h3("scatter plot matrix"),
@@ -135,16 +117,7 @@ ui <- function(request) {fluidPage(
 			width = 9,
 			fluidRow(
 				column(9,offset = 2,
-					sliderInput(
-						"sliderIteration", 
-						label = "Iteration", 
-						min = 1, 
-						max = ds_iteration_max, 
-						value = ds_iteration_max/5,
-						animate = animationOptions(interval=200, loop=F),
-						step=ds_iteration_max/1000,
-						width='100%'
-						)
+					uiOutput("inputSliderIteration")
 				),
 				column(9,offset = 2,
 					uiOutput(outputId = "infoFile")
@@ -190,35 +163,103 @@ server <- function(input, output, session) {
 				"datatable_rows_current","datatable_cells_selected","datatable_cell_clicked","datatable_rows_selected","datatable_rows_all","datatable_columns_selected","datatable_search","datatable_state",
 				".clientValue-default-plotlyCrosstalkOpts"))
 
+	# access the data
+	# ... returns either the default dataset, or reads the new dataset from the file provided by the user
+	ds <- reactive({
+		inFile <- input$uploadedFile
+		if (!is.null(inFile)) {
+			# TODO trycatch
+			print("NEW FILE!!!")
+			print(inFile)
+			ds <- read.csv(file=inFile$datapath, header=T) #, nrow=1000
+			ds$ID <- row.names(ds) 
+			ds
+		} else {
+			default_ds
+		}
+	})		
+	ds_cols <- reactive({
+		cols <- colnames(ds())
+		cols <- cols[1:length(cols)-1]
+		cols
+	}) 
+	ds_vars <- reactive({
+		vars <- as.list(seq(1,length(ds_cols())))
+		names(vars) <- ds_cols()
+		vars
+	})
+	ds_numeric_cols <- reactive({
+		# identify numeric columns
+		ds <- ds()
+		ds_numeric_cols <- colnames(ds[,sapply(ds, is.numeric)])
+		ds_numeric_cols <- ds_numeric_cols[1:length(ds_numeric_cols)]
+		# append the "nothing" choice
+		ds_numeric_cols <- append(ds_numeric_cols[2:length(ds_numeric_cols)], list("[no color]"=1),0)
+
+		ds_numeric_cols
+	})
+	ds_iteration_max <- reactive({
+		max(ds()$evolution.generation)
+	})
+	displayed_file <- reactive({
+		inFile <- input$uploadedFile
+		if (!is.null(inFile)) {
+			print("NEW FILE!!!")
+			print(inFile)
+			inf <- file.info(inFile$datapath)
+			list(
+				file=inFile$name,
+				date=inf$mtime, # anyway we lost track of the original datetime after the upload :-/ 
+				size=inf$size	
+			)
+
+		} else {
+			default_displayed_file
+		}
+	})
+	display_file_origin <- reactive({
+		inFile <- input$uploadedFile
+		if (!is.null(inFile)) {
+			"uploaded"
+		} else {
+			"created"
+		}
+	})
+	displayed_file_basename <- reactive({
+		basename(as.character(displayed_file()$file))
+	})
+
+	# access user parameters
 	varx <- reactive({
-		ds_cols[as.integer(input$x)]
+		ds_cols()[as.integer(input$x)]
 	})
 	vary <- reactive({
-		ds_cols[as.integer(input$y)]
+		ds_cols()[as.integer(input$y)]
 	})
 	iteration <- reactive({
 		as.integer(input$sliderIteration)
 	})
 	relevant_ds <- reactive({
+		ds <- ds()
 		ds[ds$evolution.generation==iteration(),]
 	})
 	
 	min_x <- reactive({
-		min(ds[,as.integer(input$x)])
+		min(ds()[,as.integer(input$x)])
 	})
 	max_x <- reactive({
-		max(ds[,as.integer(input$x)])
+		max(ds()[,as.integer(input$x)])
 	})
 	
 	min_y <- reactive({
-		min(ds[,as.integer(input$y)])
+		min(ds()[,as.integer(input$y)])
 	})
 	max_y <- reactive({
-		max(ds[,as.integer(input$y)])
+		max(ds()[,as.integer(input$y)])
 	})
 	
 	var_color <- reactive({
-		if (input$colorvar=="1") { 
+		if (is.null(input$colorvar) || input$colorvar=="1") { 
 			#print("no color!")
 			NULL
 		} else {
@@ -298,6 +339,44 @@ server <- function(input, output, session) {
 				}
 				)
 		
+	})
+
+	# all the input UI widgets rendered server side because they rely on data
+	output$inputColorVar <- renderUI({
+		selectInput(	"colorvar", 
+			label = "color", 
+			choices = ds_numeric_cols(), 
+			selected = 1
+			)
+	})
+
+	output$inputScatterX <- renderUI({
+		ds_vars <- ds_vars()
+		selectInput(	"x", "X",
+				choices = ds_vars[2:length(ds_vars)],
+				selected = length(ds_cols())-1
+				)
+	})
+
+	output$inputScatterY <- renderUI({
+		ds_vars <- ds_vars()
+		selectInput(	"y", "Y",
+				choices = ds_vars[2:length(ds_vars)],
+				selected = length(ds_cols())
+				)
+	})
+	output$inputSliderIteration <- renderUI({	
+		ds_iteration_max <- ds_iteration_max()
+		sliderInput(
+			"sliderIteration", 
+			label = "Iteration", 
+			min = 1, 
+			max = ds_iteration_max, 
+			value = ds_iteration_max/5,
+			animate = animationOptions(interval=150, loop=F),
+			step=ds_iteration_max/1000,
+			width='100%'
+			)		
 	})
 	
 	output$scatterPlot <- renderPlotly({
@@ -580,6 +659,7 @@ server <- function(input, output, session) {
 
 
 	output$infoFile <- renderUI({
+		displayed_file <- displayed_file()
 		size_mb <- as.integer(displayed_file$size/1024/1024)
 		size <- if (size_mb <= 0) {
 			paste(as.integer(displayed_file$size/1024), "Kb")
@@ -587,13 +667,14 @@ server <- function(input, output, session) {
 			paste(size_mb, "Mb")			
 		}
 
-		tagList("displaying file", code(as.character(displayed_file$file)), 
-			"created on", as.character(displayed_file$date), 
+		tagList("displaying file", code(displayed_file_basename()), 
+			display_file_origin(), "on", as.character(displayed_file$date), 
 			"(", size, ")")
 	})
 
 
 	output$inputVariablesSplom <- renderUI({
+		ds_cols <- ds_cols()
 		selectInput(
 			"splomVariables", label = "show variables", 
 			choices = as.list(ds_cols[2:length(ds_cols)]),
@@ -602,7 +683,7 @@ server <- function(input, output, session) {
 	})
 
 	output$inputVariablesParPlot <- renderUI({
-		print(input)
+		ds_cols <- ds_cols()
 		selectInput(
 			"parPlotVariables", label = "show variables", 
 			choices = as.list(ds_cols[2:length(ds_cols)]),
@@ -611,6 +692,7 @@ server <- function(input, output, session) {
 	})
 
 	output$inputVariablesTable <- renderUI({
+		ds_cols <- ds_cols()
 		selectInput(
 			"tableVariables", label = "show columns", 
 			choices = as.list(ds_cols[2:length(ds_cols)]),
@@ -624,8 +706,13 @@ server <- function(input, output, session) {
 			a("github.com/samthiriot/plot-evolutionary-algo",href="https://github.com/samthiriot/plot-evolutionary-algo",target="_blank"))
 	})
 
+	output$titlePanel <- renderUI({
+		titlePanel(displayed_file_basename())
+	})
+
 
 }
 
+options(shiny.maxRequestSize = 100*1024^2)
 shinyApp(ui = ui, server = server, enableBookmarking = "url")
 
