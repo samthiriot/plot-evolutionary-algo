@@ -89,7 +89,8 @@ ui <- function(request) {fluidPage(
 				uiOutput("inputScatterX"),
 				checkboxInput("xlog", label = "logarithmic", value = FALSE),
 				uiOutput("inputScatterY"),
-				checkboxInput("ylog", label = "logarithmic", value = FALSE)
+				checkboxInput("ylog", label = "logarithmic", value = FALSE),
+				checkboxInput("rangeWhole", label = "range of axis for all iterations", value = TRUE)
 			),
 			h3("scatter plot matrix"),
 			checkboxInput("drawSplom", label = "draw scatter plot matrix", value = FALSE),
@@ -404,13 +405,13 @@ server <- function(input, output, session) {
 			
 			# define range of variables so they do not change over iterations 
 			# (only if numeric!)
-			range_x <- if (is.numeric(relevant_ds[,varx()])) {
+			range_x <- if (input$rangeWhole && is.numeric(relevant_ds[,varx()])) {
 				margin <- (max_x() - min_x())/100
 				c(min_x()-margin,max_x()+margin)
 			} else {
 				NULL
 			}
-			range_y <- if (is.numeric(relevant_ds[,vary()])) {
+			range_y <- if (input$rangeWhole && is.numeric(relevant_ds[,vary()])) {
 				margin <- (max_y() - min_y())/100
 				c(min_y()-margin,max_y()+margin)
 			} else {
