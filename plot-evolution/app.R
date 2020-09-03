@@ -490,7 +490,6 @@ server <- function(input, output, session) {
 							list(label=v, values=relevant_ds[,v])
 						} else {
 							vv <- sort(unique(relevant_ds[,v]))
-							print("non numeric")
 							
 							cvals <- seq(1,length(vv)) - length(vv)/2
 							vals <- as.list(cvals)

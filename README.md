@@ -37,6 +37,7 @@ Advanced features:
 
 ![Advanced Features: SPLOM](./doc/screenshot-splom.png)
 
+![Advanced Features: selection](./doc/screenshot-select.png)
 
 # Quickstart
 
